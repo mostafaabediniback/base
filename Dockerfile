@@ -1,19 +1,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
-COPY deploy/hrms-backend-render-fixed.zip.b64.txt /tmp/hrms.b64
-RUN base64 -d /tmp/hrms.b64 > /tmp/hrms.zip && \
-    mkdir /real && cd /real && \
-    python3 -c "import zipfile; zipfile.ZipFile('/tmp/hrms.zip').extractall('.')"
-WORKDIR /real
-RUN dotnet restore HRMS.sln
+COPY deploy/HRMS.Application\(6\).zip /tmp/hrms.zip
+RUN unzip -q /tmp/hrms.zip -d /src
+RUN dotnet restore HRMS.API/HRMS.API.csproj
 RUN dotnet publish HRMS.API/HRMS.API.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENV ASPNETCORE_URLS=http://+:10000
+ENV ASPNETCORE_URLS=http://0.0.0.0:10000
+ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_USE_POLLING_FILE_WATCHER=1
 ENV DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE=false
-ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 10000
 ENTRYPOINT ["dotnet", "HRMS.API.dll"]
