@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: hrms-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: hrms-db
+          property: connectionString
+
+databases:
+  - name: hrms-db
+    plan: free
+    databaseName: hrms
+    user: hrms
