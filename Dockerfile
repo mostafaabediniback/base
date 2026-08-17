@@ -1,6 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY . .
+COPY deploy/hrms-backend-render-fixed.zip.b64.txt /tmp/hrms.b64
+RUN base64 -d /tmp/hrms.b64 > /tmp/hrms.zip && \
+    mkdir /real && cd /real && \
+    python3 -c "import zipfile; zipfile.ZipFile('/tmp/hrms.zip').extractall('.')"
+WORKDIR /real
 RUN dotnet restore HRMS.sln
 RUN dotnet publish HRMS.API/HRMS.API.csproj -c Release -o /app/publish --no-restore
 
